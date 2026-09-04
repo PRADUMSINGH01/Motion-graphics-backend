@@ -1,0 +1,25 @@
+# Firebase App Hosting Configuration
+# Documentation: https://firebase.google.com/docs/app-hosting/configure
+
+# Settings for the Cloud Run instance
+runConfig:
+  minInstances: 0
+  maxInstances: 5
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+# Environment variables
+env:
+  - variable: NODE_ENV
+    value: production
+
+  # Secrets managed via Firebase App Hosting Secret Manager:
+  # - variable: GOOGLE_CLIENT_ID
+  #   secret: GOOGLE_CLIENT_ID
+  # - variable: GOOGLE_CLIENT_SECRET
+  #   secret: GOOGLE_CLIENT_SECRET
+  # - variable: FIREBASE_ADMIN
+  #   secret: FIREBASE_ADMIN
+  # - variable: REDIS_URL
+  #   secret: REDIS_URL
