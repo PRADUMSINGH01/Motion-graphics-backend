@@ -1,10 +1,19 @@
 import express from "express";
+import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const server = express();
 const PORT = process.env.PORT || 3001;
+
+// CORS configuration to allow requests from local dev and production frontend
+server.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 server.use(express.json());
 
