@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motion - Transactional Email Design System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #000000;
+            color: #f4f4f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #09090b;
+            border-bottom: 1px solid #18181b;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logo-box {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background-color: #ffffff;
+            color: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 13px;
+        }
+        .brand-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fafafa;
+            letter-spacing: -0.2px;
+        }
+        .brand-sub {
+            font-size: 12px;
+            color: #71717a;
+            margin-left: 6px;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #a1a1aa;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .tab-btn:hover {
+            color: #fafafa;
+            background-color: #18181b;
+        }
+        .tab-btn.active {
+            background-color: #27272a;
+            border-color: #3f3f46;
+            color: #ffffff;
+            font-weight: 600;
+        }
+        .divider {
+            width: 1px;
+            height: 20px;
+            background: #27272a;
+            margin: 0 4px;
+        }
+        .toggle-btn {
+            background: #121215;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            color: #ffffff;
+            background-color: #27272a;
+            border-color: #3f3f46;
+        }
+        .preview-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            padding: 32px 16px 48px 16px;
+            overflow-y: auto;
+            background-color: #09090b;
+        }
+        .frame-wrapper {
+            width: 100%;
+            max-width: 580px;
+            transition: max-width 0.25s ease;
+            background: #000000;
+            border-radius: 12px;
+            border: 1px solid #18181b;
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .frame-wrapper.mobile {
+            max-width: 375px;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: none;
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <div class="logo-box">M</div>
+            <div>
+                <span class="brand-title">Motion Emails</span>
+                <span class="brand-sub">Linear & Stripe Grade Templates</span>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="tab-btn active" onclick="switchTemplate('login')">Login Alert</button>
+            <button class="tab-btn" onclick="switchTemplate('register')">Welcome</button>
+            <button class="tab-btn" onclick="switchTemplate('reset')">Password Reset</button>
+            
+            <div class="divider"></div>
+
+            <button class="toggle-btn active" id="btn-theme-dark" onclick="setTheme('dark')">Dark</button>
+            <button class="toggle-btn" id="btn-theme-light" onclick="setTheme('light')">Light</button>
+
+            <div class="divider"></div>
+
+            <button class="toggle-btn active" id="btn-desktop" onclick="setViewport('desktop')">Desktop</button>
+            <button class="toggle-btn" id="btn-mobile" onclick="setViewport('mobile')">Mobile</button>
+        </div>
+    </header>
+
+    <main class="preview-container">
+        <div class="frame-wrapper" id="frame-wrapper">
+            <iframe id="preview-frame"></iframe>
+        </div>
+    </main>
+
+    <script>
+        let currentTemplate = 'login';
+        let currentTheme = 'dark';
+        const frame = document.getElementById('preview-frame');
+        const wrapper = document.getElementById('frame-wrapper');
+
+        function generateContent(type, theme) {
+            const isDark = theme === 'dark';
+            const bgOuter = isDark ? '#09090b' : '#f4f4f5';
+            const bgCard = isDark ? '#121215' : '#ffffff';
+            const borderCard = isDark ? '#27272a' : '#e4e4e7';
+            const textPrimary = isDark ? '#fafafa' : '#09090b';
+            const textSecondary = isDark ? '#a1a1aa' : '#52525b';
+            const textMuted = isDark ? '#71717a' : '#71717a';
+            const boxBg = isDark ? '#18181b' : '#f8fafc';
+            const boxBorder = isDark ? '#27272a' : '#e2e8f0';
+            const btnBg = isDark ? '#ffffff' : '#09090b';
+            const btnText = isDark ? '#09090b' : '#ffffff';
+            const badgeBg = isDark ? '#1f1f23' : '#f4f4f5';
+            const badgeBorder = isDark ? '#2e2e33' : '#e4e4e7';
+            const rowBorder = isDark ? '#27272a' : '#edf2f7';
+
+            let title = '';
+            let badgeText = '';
+            let innerHtml = '';
+
+            if (type === 'login') {
+                badgeText = 'SECURITY NOTICE';
+                title = 'New login to your account';
+                innerHtml = `
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        Hi Alex Rivera,
+                    </p>
+                    <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        We detected a new sign-in to your Motion account (<span style="color: ${textPrimary}; font-weight: 500;">alex.rivera@example.com</span>).
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${boxBg}; border: 1px solid ${boxBorder}; border-radius: 8px; margin-bottom: 24px;">
+                        <tr>
+                            <td style="padding: 16px 18px;">
+                                <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                    <tr>
+                                        <td style="padding: 6px 0; font-size: 13px; color: ${textMuted}; width: 34%;">Time</td>
+                                        <td style="padding: 6px 0; font-size: 13px; font-weight: 500; color: ${textPrimary};">${new Date().toUTCString()}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 6px 0; font-size: 13px; color: ${textMuted}; border-top: 1px solid ${rowBorder};">Device</td>
+                                        <td style="padding: 6px 0; font-size: 13px; font-weight: 500; color: ${textPrimary}; border-top: 1px solid ${rowBorder};">Chrome on Windows 11</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 6px 0; font-size: 13px; color: ${textMuted}; border-top: 1px solid ${rowBorder};">IP Address</td>
+                                        <td style="padding: 6px 0; font-size: 13px; font-family: monospace; color: ${textPrimary}; border-top: 1px solid ${rowBorder};">192.168.1.42</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 6px 0; font-size: 13px; color: ${textMuted}; border-top: 1px solid ${rowBorder};">Location</td>
+                                        <td style="padding: 6px 0; font-size: 13px; font-weight: 500; color: ${textPrimary}; border-top: 1px solid ${rowBorder};">San Francisco, CA (approximate)</td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="margin: 0 0 6px 0; font-size: 13px; line-height: 20px; color: ${textSecondary};">
+                        If this was you, you can safely disregard this email.
+                    </p>
+                    <p style="margin: 0 0 28px 0; font-size: 13px; line-height: 20px; color: ${textMuted};">
+                        If you do not recognize this activity, please secure your account immediately by resetting your password.
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td align="center" style="border-radius: 8px; background-color: ${btnBg};">
+                                <a href="#" style="font-size: 14px; font-weight: 600; color: ${btnText}; text-decoration: none; border-radius: 8px; padding: 12px 22px; display: inline-block;">
+                                    Review Security Activity
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+            } else if (type === 'register') {
+                badgeText = 'ACCOUNT READY';
+                title = 'Welcome to Motion';
+                innerHtml = `
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        Hi Alex Rivera,
+                    </p>
+                    <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        Welcome to <strong style="color: ${textPrimary};">Motion</strong>. Your account has been created and you now have access to our autonomous motion graphics studio and cloud GPU render pipeline.
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 24px;">
+                        <tr>
+                            <td style="vertical-align: top; width: 26px; padding-bottom: 18px;">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${isDark ? '#27272a' : '#e4e4e7'}; color: ${textPrimary}; text-align: center; line-height: 20px; font-size: 11px; font-weight: 700;">1</div>
+                            </td>
+                            <td style="vertical-align: top; padding-left: 10px; padding-bottom: 18px;">
+                                <strong style="color: ${textPrimary}; font-size: 14px; display: block; margin-bottom: 2px;">Prompt your first animation</strong>
+                                <span style="color: ${textSecondary}; font-size: 13px; line-height: 19px;">Describe your visual concept in plain language. Animagent computes bezier springs, camera paths, and keyframes automatically.</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; width: 26px; padding-bottom: 18px;">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${isDark ? '#27272a' : '#e4e4e7'}; color: ${textPrimary}; text-align: center; line-height: 20px; font-size: 11px; font-weight: 700;">2</div>
+                            </td>
+                            <td style="vertical-align: top; padding-left: 10px; padding-bottom: 18px;">
+                                <strong style="color: ${textPrimary}; font-size: 14px; display: block; margin-bottom: 2px;">Fine-tune in the timeline</strong>
+                                <span style="color: ${textSecondary}; font-size: 13px; line-height: 19px;">Make adjustments to curves, timings, and easing parameters in the real-time canvas editor.</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="vertical-align: top; width: 26px;">
+                                <div style="width: 20px; height: 20px; border-radius: 50%; background-color: ${isDark ? '#27272a' : '#e4e4e7'}; color: ${textPrimary}; text-align: center; line-height: 20px; font-size: 11px; font-weight: 700;">3</div>
+                            </td>
+                            <td style="vertical-align: top; padding-left: 10px;">
+                                <strong style="color: ${textPrimary}; font-size: 14px; display: block; margin-bottom: 2px;">Export at 4K 60fps</strong>
+                                <span style="color: ${textSecondary}; font-size: 13px; line-height: 19px;">Send compositions directly to our dedicated cloud GPU cluster for instant broadcast-quality renders.</span>
+                            </td>
+                        </tr>
+                    </table>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-top: 24px; margin-bottom: 8px;">
+                        <tr>
+                            <td align="center" style="border-radius: 8px; background-color: ${btnBg};">
+                                <a href="#" style="font-size: 14px; font-weight: 600; color: ${btnText}; text-decoration: none; border-radius: 8px; padding: 12px 22px; display: inline-block;">
+                                    Open Motion Studio
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                `;
+            } else if (type === 'reset') {
+                badgeText = 'PASSWORD RECOVERY';
+                title = 'Reset your password';
+                innerHtml = `
+                    <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        Hi Alex Rivera,
+                    </p>
+                    <p style="margin: 0 0 20px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        We received a request to reset the password for your Motion account associated with <span style="color: ${textPrimary}; font-weight: 500;">alex.rivera@example.com</span>.
+                    </p>
+                    <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 22px; color: ${textSecondary};">
+                        Click the button below to choose a new password. For security, this link will expire in <strong style="color: ${textPrimary};">15 minutes</strong>.
+                    </p>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin-bottom: 26px;">
+                        <tr>
+                            <td align="center" style="border-radius: 8px; background-color: ${btnBg};">
+                                <a href="#" style="font-size: 14px; font-weight: 600; color: ${btnText}; text-decoration: none; border-radius: 8px; padding: 12px 24px; display: inline-block;">
+                                    Reset Password
+                                </a>
+                            </td>
+                        </tr>
+                    </table>
+                    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${boxBg}; border: 1px solid ${boxBorder}; border-radius: 8px; margin-bottom: 22px;">
+                        <tr>
+                            <td style="padding: 14px 16px;">
+                                <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: ${textMuted}; letter-spacing: 0.5px; margin-bottom: 4px;">
+                                    Trouble clicking? Paste this link into your browser:
+                                </div>
+                                <div style="font-size: 12px; font-family: monospace; word-break: break-all; color: ${isDark ? '#818cf8' : '#4f46e5'}; line-height: 18px;">
+                                    https://motion.dev/reset-password?token=a8f93bc091d743fe82b
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                    <p style="margin: 0; font-size: 13px; line-height: 20px; color: ${textMuted};">
+                        If you did not request this password reset, no action is needed. Your current password remains secure and will not change.
+                    </p>
+                `;
+            }
+
+            return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title}</title>
+    <style>
+        body { margin: 0; padding: 40px 16px; background-color: ${bgOuter}; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    </style>
+</head>
+<body>
+    <div style="max-width: 520px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="margin-bottom: 24px;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                <tr>
+                    <td style="width: 26px; height: 26px; background-color: ${textPrimary}; border-radius: 6px; text-align: center; vertical-align: middle;">
+                        <span style="font-size: 13px; font-weight: 800; color: ${bgOuter}; font-family: -apple-system, sans-serif;">M</span>
+                    </td>
+                    <td style="padding-left: 9px; vertical-align: middle;">
+                        <span style="font-size: 15px; font-weight: 700; color: ${textPrimary}; font-family: -apple-system, sans-serif; letter-spacing: -0.2px;">Motion</span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Card -->
+        <div style="background-color: ${bgCard}; border: 1px solid ${borderCard}; border-radius: 12px; padding: 36px 32px;">
+            <div style="display: inline-block; background-color: ${badgeBg}; border: 1px solid ${badgeBorder}; border-radius: 5px; padding: 3px 8px; font-size: 10px; font-weight: 700; color: ${textSecondary}; letter-spacing: 0.6px; margin-bottom: 16px;">
+                ${badgeText}
+            </div>
+            <h1 style="margin: 0 0 16px 0; font-size: 21px; font-weight: 700; color: ${textPrimary}; letter-spacing: -0.4px; line-height: 28px;">
+                ${title}
+            </h1>
+            ${innerHtml}
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 22px 8px 0 8px; font-size: 12px; line-height: 18px; color: ${textMuted};">
+            <div>You received this email because of activity on your Motion account.</div>
+            <div style="margin-top: 8px;">
+                Motion Inc. &bull; Autonomous Motion Graphics &bull; 
+                <a href="#" style="color: ${textMuted}; text-decoration: underline;">Security</a> &bull; 
+                <a href="#" style="color: ${textMuted}; text-decoration: underline;">Support</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+        }
+
+        function render() {
+            const html = generateContent(currentTemplate, currentTheme);
+            const doc = frame.contentWindow.document;
+            doc.open();
+            doc.write(html);
+            doc.close();
+        }
+
+        function switchTemplate(type) {
+            currentTemplate = type;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.getElementById('btn-theme-dark').classList.toggle('active', theme === 'dark');
+            document.getElementById('btn-theme-light').classList.toggle('active', theme === 'light');
+            render();
+        }
+
+        function setViewport(mode) {
+            document.getElementById('btn-desktop').classList.toggle('active', mode === 'desktop');
+            document.getElementById('btn-mobile').classList.toggle('active', mode === 'mobile');
+            wrapper.classList.toggle('mobile', mode === 'mobile');
+        }
+
+        window.onload = render;
+    </script>
+</body>
+</html>

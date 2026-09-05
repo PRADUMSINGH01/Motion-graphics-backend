@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["server.ts"],
+  "include": ["server.ts", "src/**/*", "worker/**/*"],
   "exclude": ["node_modules", "dist"]
 }
