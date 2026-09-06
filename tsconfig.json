@@ -11,6 +11,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["server.ts", "src/**/*", "worker/**/*"],
+  "include": ["server.ts", "src/**/*", "firebase/**/*", "worker/**/*"],
   "exclude": ["node_modules", "dist"]
 }

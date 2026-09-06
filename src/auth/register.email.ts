@@ -1,120 +1,79 @@
 import { Router, Request, Response } from "express";
 import { z } from "zod";
+import { userService } from "../services/user.service.js";
+import { CreateEmailUserDtoSchema } from "../schemas/user.schema.js";
+import { EMAiLQUEUE } from "../../worker/queue.js";
 
+const router = Router();
 
-const router = Router()
+router.post("/", async (req: Request, res: Response) => {
+  try {
+    const parseResult = CreateEmailUserDtoSchema.safeParse(req.body);
 
-const mockdata = {
-    email: "",
-    password: "",
-    username: "",
-    plan: "",
-    role: "",
-    isVerified: false,
-    tokens: {
-        accessToken: "",
-        refreshToken: ""
-    },
-    membership: {
-        token: "",
-        type: "",
-        startDate: "",
-        endDate: ""
-    },
-    apiKeys: {
-        key: "",
-        secret: ""
-    },
-    usages: {
-        daily: 0,
-        weekly: 0,
-        yearly: 0
-    }
-}
-
-
-
-const registerSchema = z.object({
-    email: z.string().email(),
-    password: z.string().min(6).max(12),
-    username: z.string().min(3).max(20),
-    plan: z.string().min(3).max(20),
-    role: z.string().min(3).max(20),
-    isVerified: z.boolean(),
-    authtokens: z.object({
-        accessToken: z.string().min(3).max(100),
-        refreshToken: z.string().min(3).max(100)
-    }),
-    membership: z.string().min(3).max(20),
-    apiKeys: z.object({
-        key: z.string().min(3).max(100),
-        secret: z.string().min(3).max(100)
-    }),
-    usages: z.object({
-        daily: z.number().min(0).max(10),
-        weekly: z.number().min(0).max(50),
-        yearly: z.number().min(0).max(1000)
-    })
-})
-
-
-interface RegisterData {
-    email: string;
-    password: string;
-    username: string;
-    plan: string;
-    role: string;
-
-    isVerified: boolean;
-    authtokens: {
-        accessToken: string;    
-    refreshToken: string;
-    };
-    membership: string; 
-    apiKeys: {
-        key: string;
-        secret: string;
-    };
-    usages: {
-        daily: number;
-        weekly: number;
-        yearly: number;
-    };
-        }
-
-
-
-router.post("/register/email", async (req: Request, res: Response): Promise<unknown> => {
-
-    const registerdata = registerSchema.safeParse(req.body)
-    if (!registerdata.success) {
-        return res.json({
-            success: false,
-            message: "invalid data"
-        })
+    if (!parseResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid registration payload.",
+        errors: parseResult.error.flatten().fieldErrors,
+      });
     }
 
-    if (registerdata.data.email === mockdata.email) {
-        return res.json({
-            success: false,
-            message: "email already exists"
-        })
-    }
+    const { email, password, name, username, plan } = parseResult.data;
+    const ip = req.ip || (req.headers["x-forwarded-for"] as string) || undefined;
+    const userAgent = req.headers["user-agent"] || undefined;
 
+    const { user, publicUser } = await userService.createUserWithEmail(
+      {
+        email,
+        password,
+        name,
+        username,
+        plan,
+      },
+      { ip, userAgent }
+    );
+
+    // Queue welcome email in background (non-blocking)
     try {
-        //hash the password and store it in the database
-        //send email to user for mail information for registration
-        res.cookie("token", "mocktoken", {  })
-        return res.json({
-            success: true,
-            message: "user registered successfully"
-        })
-    } catch (error: unknown) {
-        if (error instanceof Error) {
-            res.json({
-                success: false,
-                message: error.message
-            })
-        }
+      await EMAiLQUEUE.add("register", {
+        to: user.email,
+        name: user.profile.displayName,
+        dashboardUrl: process.env.FRONTEND_URL || "https://motion.dev/dashboard",
+      });
+    } catch (queueErr) {
+      console.warn("[Register] Failed to queue welcome email:", queueErr);
     }
-})
+
+    res.cookie("token", user.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "User registered successfully.",
+      user: publicUser,
+      token: user.id,
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Registration failed.";
+    console.error("[Register] Error:", error);
+
+    const statusCode = message.includes("already exists") ? 409 : 500;
+    return res.status(statusCode).json({
+      success: false,
+      message,
+    });
+  }
+});
+
+router.get("/", (_req: Request, res: Response) => {
+  return res.status(405).json({
+    success: false,
+    message: "Method not allowed. Use POST to register a new user.",
+  });
+});
+
+export default router;
