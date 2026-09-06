@@ -5,7 +5,6 @@ import {
   getFirebaseApp,
   getDb,
   getAuth,
-  getFirestore,
   getStorage,
   db,
   auth,
@@ -62,9 +61,6 @@ async function runFirebaseTests() {
     assert.ok(authInstance, "Auth instance must be returned");
     assert.equal(typeof authInstance.createUser, "function", "auth.createUser must be a function");
 
-    const firestoreInstance = getFirestore();
-    assert.ok(firestoreInstance, "Firestore instance must be returned");
-
     const storageInstance = getStorage();
     assert.ok(storageInstance, "Storage instance must be returned");
 
@@ -72,7 +68,7 @@ async function runFirebaseTests() {
     assert.equal(typeof db.ref, "function", "Proxy db.ref must be callable");
     assert.equal(typeof auth.createUser, "function", "Proxy auth.createUser must be callable");
 
-    console.log("✓ Test 3 Passed: App and all services (Database, Auth, Firestore, Storage) initialized.\n");
+    console.log("✓ Test 3 Passed: App and all services (Database, Auth, Storage) initialized.\n");
 
     // Test 4: Live connection verification
     console.log("[Test 4] Performing live connection verification...");
