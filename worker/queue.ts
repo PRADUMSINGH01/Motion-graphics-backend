@@ -5,7 +5,7 @@ export const EMAiLQUEUE = new Queue("email", {
     connection: redisConnection,
 });
 
-export const AGENTQUEUE = new Queue("AGENT", {
+export const AGENTQUEUE = new Queue("agent", {
     connection: redisConnection,
 });
 

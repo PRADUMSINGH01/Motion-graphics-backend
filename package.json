@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch server.ts",
+    "worker": "tsx watch worker/worker.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "tsx src/tests/firebase.test.ts",

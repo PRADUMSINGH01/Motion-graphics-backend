@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import routers from "./src/routes/routes.js";
 import { getFirebaseStatus } from "./firebase/init.js";
+import "./worker/worker.js";
 
 // Global process error handlers to prevent container crashes on transient errors
 process.on("unhandledRejection", (reason, promise) => {

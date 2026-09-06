@@ -44,4 +44,37 @@ EMAiLWORKER.on("completed", (job) => {
 EMAiLWORKER.on("failed", (job, err) => {
     console.error(`Job ${job?.id} (${job?.name}) failed:`, err);
 });
-
+
+
+
+export const AGENTWORKER = new Worker(
+    "agent",
+    async (job) => {
+        console.log(`[AgentWorker] Processing job ${job.id} of type: ${job.name}`);
+        const { prompt, userId, promptId } = job.data || {};
+
+        console.log(`[AgentWorker] Executing prompt motion task for User: ${userId}, PromptId: ${promptId}`);
+        console.log(`[AgentWorker] Prompt: "${prompt}"`);
+
+        // Return processed job payload
+        return {
+            status: "success",
+            jobId: job.id,
+            userId,
+            promptId,
+            prompt,
+            processedAt: new Date().toISOString(),
+        };
+    },
+    {
+        connection: redisConnection,
+    }
+);
+
+AGENTWORKER.on("completed", (job, result) => {
+    console.log(`[AgentWorker] Job ${job.id} (${job.name}) completed successfully:`, result);
+});
+
+AGENTWORKER.on("failed", (job, err) => {
+    console.error(`[AgentWorker] Job ${job?.id} (${job?.name}) failed:`, err);
+});

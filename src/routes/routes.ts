@@ -5,8 +5,8 @@ import googleLogin from "../auth/login.google.js";
 import googleRegister from "../auth/register.google.js";
 import keysRouter from "./keys.routes.js";
 import userRouter from "./user.routes.js";
-import { authRateLimiter, emailAuthLimiter } from "../middleware/RateLimiter.js";
-
+import { authRateLimiter, emailAuthLimiter, apiRateLimiter } from "../middleware/RateLimiter.js";
+import promptRouter from "../request/prompt.js";
 const router = Router();
 
 // Strict: 10 attempts per 15m (IP) and 5 attempts per hour (per email)
@@ -14,6 +14,8 @@ router.use("/login", authRateLimiter, emailAuthLimiter, login);
 router.use("/register", authRateLimiter, register);
 router.use("/google", authRateLimiter, googleLogin);
 router.use("/google/register", authRateLimiter, googleRegister);
+router.use("/prompt", apiRateLimiter, promptRouter);
+
 
 router.post("/logout", (req, res) => {
   res.clearCookie("token", { httpOnly: true, sameSite: "lax" });
