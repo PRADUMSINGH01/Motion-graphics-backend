@@ -5,7 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import routers from "./src/routes/routes.js";
 import { getFirebaseStatus } from "./firebase/init.js";
-
+import { RateLimiter } from "./src/middleware/RateLimiter.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -55,14 +55,9 @@ server.get("/health", (req, res) => {
   });
 });
 
-/*
-Live preview hub for transactional emails
-server.get("/preview-emails", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/emails/preview.html"));
-});
-*/
 
-server.use("/api", routers);
+
+server.use("/api",  routers);
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

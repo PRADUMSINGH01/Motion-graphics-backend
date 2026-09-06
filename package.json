@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "tsx src/tests/firebase.test.ts",
-    "test:all": "tsx src/tests/firebase.test.ts && tsx src/tests/user.test.ts"
+    "test:ratelimit": "tsx src/tests/ratelimit.test.ts",
+    "test:all": "tsx src/tests/firebase.test.ts && tsx src/tests/user.test.ts && tsx src/tests/ratelimit.test.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,11 +24,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
     "firebase-admin": "^14.3.0",
     "google-auth-library": "^10.0.0",
     "ioredis": "^5.11.1",
     "nodemailer": "^10.0.0",
     "nodemon": "^3.1.14",
+    "rate-limit-redis": "^6.0.1",
     "redis": "^6.2.1",
     "typescript": "^5.7.3",
     "zod": "^4.5.4"
