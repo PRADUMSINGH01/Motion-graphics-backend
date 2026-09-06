@@ -5,12 +5,21 @@ import path from "path";
 import { fileURLToPath } from "url";
 import routers from "./src/routes/routes.js";
 import { getFirebaseStatus } from "./firebase/init.js";
-import { RateLimiter } from "./src/middleware/RateLimiter.js";
+
+// Global process error handlers to prevent container crashes on transient errors
+process.on("unhandledRejection", (reason, promise) => {
+  console.warn("[Server] Unhandled Rejection (non-fatal):", reason);
+});
+
+process.on("uncaughtException", (err) => {
+  console.error("[Server] Uncaught Exception (handled):", err);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export const server = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8080;
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
@@ -33,7 +42,6 @@ const corsOptions: cors.CorsOptions = {
   credentials: true,
 };
 
-
 server.use(cors(corsOptions));
 server.use(express.json());
 
@@ -46,6 +54,7 @@ server.get("/health", (req, res) => {
   res.status(200).json({
     status: "OK",
     service: "Motion Graphics Backend",
+    port: PORT,
     firebase: {
       ready: fbStatus.isReady,
       projectId: fbStatus.projectId || null,
@@ -55,10 +64,9 @@ server.get("/health", (req, res) => {
   });
 });
 
+server.use("/api", routers);
 
-
-server.use("/api",  routers);
-
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Cloud Run requires listening explicitly on 0.0.0.0 on the port defined by PORT
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server is running on port ${PORT} (0.0.0.0)`);
 });

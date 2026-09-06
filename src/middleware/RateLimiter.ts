@@ -1,7 +1,7 @@
 import rateLimit, { RateLimitRequestHandler, ipKeyGenerator } from "express-rate-limit";
 import { RedisStore } from "rate-limit-redis";
 import type { Request, Response } from "express";
-import client, { getRedisClient } from "../redis/redis.js";
+import client, { getRedisClient, isRedisConfigured } from "../redis/redis.js";
 
 export interface CreateRateLimiterOptions {
   limit?: number;
@@ -14,12 +14,34 @@ export interface CreateRateLimiterOptions {
 }
 
 /**
- * Creates an Express rate limiter middleware backed by Redis.
+ * Creates an Express rate limiter middleware.
+ * Uses RedisStore when Redis is configured; gracefully falls back to built-in MemoryStore.
  */
 export function createRedisRateLimiter(options: CreateRateLimiterOptions = {}): RateLimitRequestHandler {
   const windowMs = options.windowMs || 15 * 60 * 1000;
   const limit = options.limit ?? 100;
   const prefix = options.prefix || "rl:";
+
+  let store: any = undefined;
+
+  // Use RedisStore only if Redis is explicitly configured
+  if (isRedisConfigured) {
+    try {
+      store = new RedisStore({
+        sendCommand: async (...args: string[]) => {
+          const redis = await getRedisClient();
+          if (!redis.isOpen) {
+            throw new Error("Redis client is not connected");
+          }
+          return redis.sendCommand(args);
+        },
+        prefix,
+      });
+    } catch (err) {
+      console.warn("[RateLimiter] Failed to initialize RedisStore, falling back to MemoryStore:", err);
+      store = undefined;
+    }
+  }
 
   return rateLimit({
     windowMs,
@@ -27,13 +49,7 @@ export function createRedisRateLimiter(options: CreateRateLimiterOptions = {}): 
     standardHeaders: "draft-7", // RateLimit-Policy, RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset
     legacyHeaders: true, // X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
     validate: { keyGeneratorIpFallback: false },
-    store: new RedisStore({
-      sendCommand: async (...args: string[]) => {
-        await getRedisClient();
-        return client.sendCommand(args);
-      },
-      prefix,
-    }),
+    store, // undefined gracefully falls back to express-rate-limit MemoryStore
     keyGenerator: options.keyGenerator,
     skipSuccessfulRequests: options.skipSuccessfulRequests,
     skipFailedRequests: options.skipFailedRequests,
@@ -67,7 +83,7 @@ export class RateLimiter {
   }
 
   /**
-   * Generates express-rate-limit middleware backed by Redis store
+   * Generates express-rate-limit middleware backed by Redis store (or MemoryStore fallback)
    */
   public getMiddleware(
     prefix = "rl:general:",
